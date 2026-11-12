@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your Name — Personal Page</title>
+<style>
+  :root{
+    --ink:#1b1d21;
+    --muted:#666e7a;
+    --line:#e7e9ee;
+    --bg:#fbfbfc;
+    --card:#ffffff;
+    --accent:#2f6feb;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans SC",sans-serif;
+  }
+  .wrap{max-width:660px;margin:0 auto;padding:64px 20px 88px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:44px 40px}
+  .avatar{
+    width:76px;height:76px;border-radius:50%;
+    background:linear-gradient(135deg,#2f6feb,#8fb3ff);
+    color:#fff;font-size:26px;font-weight:600;letter-spacing:.5px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  h1{font-size:30px;line-height:1.25;margin:22px 0 6px;letter-spacing:-.4px}
+  .tagline{margin:0;color:var(--muted);font-size:17px}
+  h2{
+    font-size:13px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--muted);margin:40px 0 10px;
+  }
+  p{margin:0 0 12px}
+  ul{margin:0;padding-left:20px}
+  li{margin:5px 0}
+  a{color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(47,111,235,.32)}
+  a:hover{border-bottom-color:var(--accent)}
+  .row{display:flex;flex-wrap:wrap;gap:8px 22px}
+  footer{
+    max-width:660px;margin:22px auto 0;padding:0 20px;
+    color:var(--muted);font-size:13px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;
+  }
+  @media (max-width:560px){
+    .wrap{padding:32px 14px 56px}
+    .card{padding:28px 22px;border-radius:12px}
+    h1{font-size:25px}
+  }
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="card">
+      <div class="avatar">YN</div>
+
+      <h1>Your Name</h1>
+      <p class="tagline">Undergraduate · Networking and Distributed Computing</p>
+
+      <h2>About</h2>
+      <p>
+        This is a placeholder paragraph. Replace it with two or three sentences about yourself:
+        what you study, what you are currently working on, and what you would like to do next.
+        Keep it short — a personal page reads better with a few honest lines than with a long CV.
+      </p>
+
+      <h2>Interests</h2>
+      <ul>
+        <li>Distributed systems — how work is split, moved and recombined</li>
+        <li>Computer networks — protocols, packet-level behaviour, performance</li>
+        <li>Data engineering — batch and stream processing with Spark</li>
+      </ul>
+
+      <h2>Contact</h2>
+      <div class="row">
+        <a href="mailto:you@example.com">Email</a>
+        <a href="https://github.com/your-username">GitHub</a>
+        <a href="#">LinkedIn</a>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <span>© 2026 Your Name</span>
+    <span>Last updated: November 2026</span>
+  </footer>
+</body>
+</html>
