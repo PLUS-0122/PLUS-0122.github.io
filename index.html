@@ -4,214 +4,26 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Jiahao Fan</title>
-<style>
-  :root{
-    --paper:#f4f3ef;
-    --ink:#14130f;
-    --muted:#6a675e;
-    --blue:#1b1bd6;
-    --serif:Georgia,"Times New Roman",Times,serif;
-    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0;height:100%}
-  body{
-    background:var(--paper);
-    color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
-    overflow:hidden;
-  }
-
-  .hero{
-    position:relative;
-    height:100vh;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:flex-start;
-    padding-top:0;
-  }
-
-  /* ---------- hanging badge ---------- */
-  .badge{
-    position:relative;
-    height:60vh;
-    width:auto;
-    margin-top:-15vh;
-    transform-origin:50% 0;
-    will-change:transform;
-    cursor:grab;
-    touch-action:none;
-    z-index:2;
-  }
-  .badge.dragging{cursor:grabbing}
-  .badge img{
-    display:block;
-    height:100%;
-    width:auto;
-    filter:drop-shadow(0 26px 34px rgba(25,24,20,.22));
-    -webkit-user-drag:none;
-    user-select:none;
-    pointer-events:none;
-  }
-
-  /* ---------- name ---------- */
-  .name{
-    font-family:var(--serif);
-    font-weight:400;
-    text-align:center;
-    line-height:.86;
-    letter-spacing:-.035em;
-    font-size:min(clamp(48px,8vw,130px),15vh);
-    margin:-6px 0 0;
-    z-index:1;
-    position:relative;
-  }
-  .name span{display:block}
-  .name .last{
-    color:var(--blue);
-    margin-top:-.06em;
-  }
-
-  .sub{
-    margin:3.4vh 0 0;
-    font-family:var(--mono);
-    font-size:11.5px;
-    letter-spacing:.24em;
-    text-transform:uppercase;
-    color:var(--muted);
-    display:flex;
-    gap:10px;
-    align-items:center;
-    z-index:1;
-  }
-  .dot{width:5px;height:5px;border-radius:50%;background:var(--blue)}
-  .rule{
-    width:1px;height:46px;
-    background:linear-gradient(180deg,rgba(20,19,15,.35),rgba(20,19,15,0));
-    margin:6px auto 0;
-  }
-
-  .hint{
-    position:fixed;
-    left:50%;
-    bottom:22px;
-    transform:translateX(-50%);
-    font-family:var(--mono);
-    font-size:10.5px;
-    letter-spacing:.22em;
-    text-transform:uppercase;
-    color:rgba(20,19,15,.42);
-    user-select:none;
-  }
-
-  @media (max-width:640px){
-    .badge{height:40vh;margin-top:-10.5vh}
-    .name{font-size:min(clamp(56px,17vw,110px),13vh)}
-    .sub{font-size:10px;letter-spacing:.16em}
-  }
-</style>
+<meta name="description" content="Jiahao Fan — BEng Data Science & Big Data Technology at XJTLU.">
+<link rel="preload" href="assets/fonts/instrument-serif-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<main class="hero">
-  <div class="badge" id="badge" role="img"
-       aria-label="Lanyard badge reading Jiahao Fan, BEng Data Science and Big Data Technology, SURF Fellow 2026">
-    <img src="assets/badge.webp" alt="" draggable="false">
-  </div>
+<main>
+  <section class="hero" aria-label="Introduction">
+    <p class="intro">I turn messy data into<br>things people can use. <button type="button" class="more" aria-haspopup="dialog">[more]</button></p>
+    <p class="education">Currently studying Data Science,<br>Big Data Technology @ XJTLU</p>
 
-  <h1 class="name">
-    <span class="first">Jiahao</span>
-    <span class="last">Fan</span>
-  </h1>
+    <h1><span>Jiahao</span> <span>Fan</span></h1>
 
-  <p class="sub">
-    <span><i class="dot"></i>BEng Data Science &amp; Big Data Technology</span>
-    <span><i class="dot"></i>XJTLU</span>
-  </p>
+    <div class="badge">
+      <img class="still" id="badgeImg" src="assets/badge.webp" width="640" height="1379"
+           alt="Jiahao Fan's badge: BEng Data Science and Big Data Technology, XJTLU, SURF Fellow 2026" draggable="false">
+    </div>
+  </section>
 </main>
 
-<div class="hint">drag the badge</div>
-
-<script>
-(function () {
-  const badge = document.getElementById('badge');
-  const PIVOT_TOP = 0;          // hangs from its top edge
-
-  let angle = 0;                // current rotation, degrees
-  let velocity = 0;             // degrees per frame
-  let target = 0;               // where the pointer wants it
-  let dragging = false;
-  let startX = 0;
-  let startAngle = 0;
-  let lastAngle = 0;
-  let pointerTarget = 0;
-
-  const MAX_TILT = 11;          // how far the pointer can pull it
-  const STIFF = 0.035;          // spring stiffness
-  const DAMP = 0.90;            // velocity damping
-
-  // pointer position -> target tilt
-  window.addEventListener('pointermove', (e) => {
-    if (dragging) return;
-    const cx = window.innerWidth / 2;
-    const norm = (e.clientX - cx) / (window.innerWidth / 2);
-    pointerTarget = Math.max(-1, Math.min(1, norm)) * MAX_TILT;
-    target = pointerTarget;
-  });
-
-  window.addEventListener('pointerleave', () => {
-    if (!dragging) target = 0;
-  });
-
-  // drag
-  badge.addEventListener('pointerdown', (e) => {
-    dragging = true;
-    badge.classList.add('dragging');
-    badge.setPointerCapture(e.pointerId);
-    startX = e.clientX;
-    startAngle = angle;
-    velocity = 0;
-  });
-
-  badge.addEventListener('pointermove', (e) => {
-    if (!dragging) return;
-    const dx = e.clientX - startX;
-    angle = startAngle + dx * 0.18;
-    velocity = angle - lastAngle;
-    lastAngle = angle;
-    const cx = window.innerWidth / 2;
-    const norm = (e.clientX - cx) / (window.innerWidth / 2);
-    pointerTarget = Math.max(-1, Math.min(1, norm)) * MAX_TILT;
-  });
-
-  function release(e) {
-    if (!dragging) return;
-    dragging = false;
-    badge.classList.remove('dragging');
-    // give it a shove, then let the spring settle toward the pointer
-    target = pointerTarget;
-  }
-  badge.addEventListener('pointerup', release);
-  badge.addEventListener('pointercancel', release);
-
-  // physics loop
-  function tick() {
-    if (!dragging) {
-      velocity += (target - angle) * STIFF;
-      velocity *= DAMP;
-      angle += velocity;
-    }
-    lastAngle = angle;
-    badge.style.transform = `rotate(${angle.toFixed(3)}deg)`;
-    requestAnimationFrame(tick);
-  }
-
-  // start with a small nudge so it feels alive
-  velocity = 0.6;
-  tick();
-})();
-</script>
-
+<script src="script.js"></script>
 </body>
 </html>
