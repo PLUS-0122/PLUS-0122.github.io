@@ -25,10 +25,10 @@ const VIS_TOP = ATTACH_Y;             // highest visible pixel of the artwork
 
 const MASS = 0.72;
 const GRIP = 100;
-const STIFF = 90;
+const STIFF = 22;          // bending springs: soft, the rope joints hold the length
 
 const SPEED = 1 / 120;
-const LINKS = 12;
+const LINKS = 10;
 
 // collision layers: card and straps only collide with the backing wall
 const G_CARD = 0x0002, G_STRAP = 0x0004, G_WALL = 0x0008;
@@ -70,7 +70,7 @@ export async function start(stage) {
   /* ------------------------------ physics ------------------------------ */
   const world = new RAPIER.World({ x: 0, y: -9.81, z: 0 });
   world.timestep = SPEED;
-  world.numSolverIterations = 32;
+  world.numSolverIterations = 48;
 
   world.createCollider(
     RAPIER.ColliderDesc.cuboid(50, 50, 0.2)
@@ -99,7 +99,7 @@ export async function start(stage) {
   const clip = (side) => ({ x: side * 0.012, y: ATTACH_Y, z: 0.05 });
 
   const strapDefs = [-1, 1].map((side) => {
-    const anchor = { x: side * 3.25, y: 8.9, z: -0.28 };
+    const anchor = { x: side * 3.4, y: 10.4, z: -0.28 };
     const attach = clip(side);
     const span = Math.hypot(anchor.x - attach.x, anchor.y - attach.y, anchor.z - attach.z);
     const segment = span / LINKS;
@@ -118,16 +118,16 @@ export async function start(stage) {
             anchor.y + (attach.y - anchor.y) * t,
             anchor.z + (attach.z - anchor.z) * t
           )
-          .setLinearDamping(1.6)
-          .setAngularDamping(1.6)
+          .setLinearDamping(3.2)
+          .setAngularDamping(3.2)
           .setCcdEnabled(true)
           .setCanSleep(false)
       );
       link.setEnabledRotations(false, false, false, false);
 
       world.createCollider(
-        RAPIER.ColliderDesc.capsule(0.05, segment / 2)
-          .setMass(0.0125)
+        RAPIER.ColliderDesc.capsule(0.045, segment / 2)
+          .setMass(0.03)
           .setFriction(0.4)
           .setCollisionGroups(groups(G_STRAP, G_WALL)),
         link
@@ -153,10 +153,10 @@ export async function start(stage) {
     const chain = [fixed, ...links];
     for (const r of [1, 2, 3]) {
       for (let i = r; i < chain.length; i++) {
-        const k = STIFF * (r === 1 ? 0.6 : r === 2 ? 1 : 0.45);
+        const k = STIFF * (r === 1 ? 0.8 : r === 2 ? 1 : 0.7);
         world.createImpulseJoint(
           RAPIER.JointData.spring(
-            segment * r, k, 1.4 * Math.sqrt(k * 0.0125),
+            segment * r, k, 2.6 * Math.sqrt(k * 0.03),
             { x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 0 }
           ),
           chain[i - r],
@@ -249,7 +249,7 @@ export async function start(stage) {
     const tanF = Math.tan(FOV * Math.PI / 360);
     const viewH = CARD_H / 0.60;          // the card fills ~60% of the height
     const d = viewH / (2 * tanF);
-    const camY = (restY + VIS_TOP + 0.03 * viewH) - viewH / 2;
+    const camY = (restY + VIS_TOP + 0.16 * viewH) - viewH / 2;
 
     camera.position.set(0, camY, d);
     camera.lookAt(0, camY, 0);
@@ -344,6 +344,27 @@ export async function start(stage) {
   const quat = new THREE.Quaternion();
   const eul = new THREE.Euler();
 
+  // The card hangs from a swivel clip, so it may yaw and pitch a little and
+  // roll even less; beyond these angles the restoring torque ramps up hard,
+  // which keeps the badge face on to the camera instead of tumbling.
+  const LIM = { pitch: 0.14, yaw: 0.20, roll: 0.10 };
+
+  function govern(dt) {
+    const q = body.rotation();
+    const e = eul.setFromQuaternion(quat.set(q.x, q.y, q.z, q.w), 'ZYX');
+    const av = body.angvel();
+    const over = (v, lim) => {
+      const a = Math.abs(v) - lim;
+      return a > 0 ? Math.sign(v) * a : 0;
+    };
+    const ox = over(e.x, LIM.pitch), oy = over(e.y, LIM.yaw), oz = over(e.z, LIM.roll);
+    body.applyTorqueImpulse({
+      x: ((-e.x * 26 - ox * 420) - av.x * 16) * dt,
+      y: ((-e.y * 18 - oy * 320) - av.y * 12) * dt,
+      z: ((-e.z * 34 - oz * 520) - av.z * 20) * dt
+    }, true);
+  }
+
   function step(dt) {
     if (dragging && pointer && grabLocal) {
       const c = body.translation();
@@ -375,18 +396,17 @@ export async function start(stage) {
       body.applyImpulseAtPoint({ x: ix * dt, y: iy * dt, z: iz * dt }, { x: px, y: py, z: pz }, true);
     }
 
-    // swivel: the card may yaw and pitch a little, but it must not roll.
-    // The real thing has a hinged clip; here a torque does the same job.
-    const q0 = body.rotation();
-    const e0 = eul.setFromQuaternion(quat.set(q0.x, q0.y, q0.z, q0.w), 'ZYX');
-    const av0 = body.angvel();
-    body.applyTorqueImpulse({
-      x: (-e0.x * 34 - av0.x * 4) * dt,
-      y: (-av0.y * 0.8) * dt,
-      z: (-e0.z * 64 - av0.z * 5.2) * dt
-    }, true);
+    govern(dt);
 
     world.step();
+
+    // keep the spin finite: a badge on a clip never twirls like a coin
+    const av = body.angvel();
+    const spin = Math.hypot(av.x, av.y, av.z);
+    if (spin > 2.2) {
+      const s = 2.2 / spin;
+      body.setAngvel({ x: av.x * s, y: av.y * s, z: av.z * s }, true);
+    }
   }
 
   function renderOnce() {
@@ -438,14 +458,7 @@ export async function start(stage) {
 
   // settle before the first paint so the badge hangs still, then reveal
   for (let i = 0; i < 720; i++) {
-    const q1 = body.rotation();
-    const e1 = eul.setFromQuaternion(quat.set(q1.x, q1.y, q1.z, q1.w), 'ZYX');
-    const av1 = body.angvel();
-    body.applyTorqueImpulse({
-      x: (-e1.x * 34 - av1.x * 4) * SPEED,
-      y: (-av1.y * 0.8) * SPEED,
-      z: (-e1.z * 64 - av1.z * 5.2) * SPEED
-    }, true);
+    govern(SPEED);
     world.step();
   }
   restY = body.translation().y;
