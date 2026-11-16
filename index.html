@@ -3,89 +3,214 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Your Name — Personal Page</title>
+<title>Jiahao Fan</title>
 <style>
   :root{
-    --ink:#1b1d21;
-    --muted:#666e7a;
-    --line:#e7e9ee;
-    --bg:#fbfbfc;
-    --card:#ffffff;
-    --accent:#2f6feb;
+    --paper:#f4f3ef;
+    --ink:#14130f;
+    --muted:#6a675e;
+    --blue:#1b1bd6;
+    --serif:Georgia,"Times New Roman",Times,serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   }
   *{box-sizing:border-box}
-  html{-webkit-text-size-adjust:100%}
+  html,body{margin:0;height:100%}
   body{
-    margin:0;
-    background:var(--bg);
+    background:var(--paper);
     color:var(--ink);
-    font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans SC",sans-serif;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    overflow:hidden;
   }
-  .wrap{max-width:660px;margin:0 auto;padding:64px 20px 88px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:44px 40px}
-  .avatar{
-    width:76px;height:76px;border-radius:50%;
-    background:linear-gradient(135deg,#2f6feb,#8fb3ff);
-    color:#fff;font-size:26px;font-weight:600;letter-spacing:.5px;
-    display:flex;align-items:center;justify-content:center;
+
+  .hero{
+    position:relative;
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-start;
+    padding-top:0;
   }
-  h1{font-size:30px;line-height:1.25;margin:22px 0 6px;letter-spacing:-.4px}
-  .tagline{margin:0;color:var(--muted);font-size:17px}
-  h2{
-    font-size:13px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;
-    color:var(--muted);margin:40px 0 10px;
+
+  /* ---------- hanging badge ---------- */
+  .badge{
+    position:relative;
+    margin-top:-140px;
+    width:250px;
+    transform-origin:50% 0;
+    will-change:transform;
+    cursor:grab;
+    touch-action:none;
+    z-index:2;
   }
-  p{margin:0 0 12px}
-  ul{margin:0;padding-left:20px}
-  li{margin:5px 0}
-  a{color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(47,111,235,.32)}
-  a:hover{border-bottom-color:var(--accent)}
-  .row{display:flex;flex-wrap:wrap;gap:8px 22px}
-  footer{
-    max-width:660px;margin:22px auto 0;padding:0 20px;
-    color:var(--muted);font-size:13px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;
+  .badge.dragging{cursor:grabbing}
+  .badge img{
+    display:block;
+    width:100%;
+    height:auto;
+    filter:drop-shadow(0 26px 34px rgba(25,24,20,.22));
+    -webkit-user-drag:none;
+    user-select:none;
+    pointer-events:none;
   }
-  @media (max-width:560px){
-    .wrap{padding:32px 14px 56px}
-    .card{padding:28px 22px;border-radius:12px}
-    h1{font-size:25px}
+
+  /* ---------- name ---------- */
+  .name{
+    font-family:var(--serif);
+    font-weight:400;
+    text-align:center;
+    line-height:.86;
+    letter-spacing:-.035em;
+    font-size:clamp(48px,7.2vw,116px);
+    margin:-6px 0 0;
+    z-index:1;
+    position:relative;
+  }
+  .name span{display:block}
+  .name .last{
+    color:var(--blue);
+    margin-top:-.06em;
+  }
+
+  .sub{
+    margin:34px 0 0;
+    font-family:var(--mono);
+    font-size:11.5px;
+    letter-spacing:.24em;
+    text-transform:uppercase;
+    color:var(--muted);
+    display:flex;
+    gap:10px;
+    align-items:center;
+    z-index:1;
+  }
+  .dot{width:5px;height:5px;border-radius:50%;background:var(--blue)}
+  .rule{
+    width:1px;height:46px;
+    background:linear-gradient(180deg,rgba(20,19,15,.35),rgba(20,19,15,0));
+    margin:6px auto 0;
+  }
+
+  .hint{
+    position:fixed;
+    left:50%;
+    bottom:22px;
+    transform:translateX(-50%);
+    font-family:var(--mono);
+    font-size:10.5px;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:rgba(20,19,15,.42);
+    user-select:none;
+  }
+
+  @media (max-width:640px){
+    .badge{width:210px;margin-top:-130px}
+    .name{font-size:clamp(56px,17vw,110px)}
+    .sub{font-size:10px;letter-spacing:.16em}
   }
 </style>
 </head>
 <body>
-  <main class="wrap">
-    <div class="card">
-      <div class="avatar">YN</div>
 
-      <h1>Your Name</h1>
-      <p class="tagline">Undergraduate · Networking and Distributed Computing</p>
+<main class="hero">
+  <div class="badge" id="badge" role="img"
+       aria-label="Lanyard badge reading Jiahao Fan, BEng Data Science and Big Data Technology, SURF Fellow 2026">
+    <img src="assets/badge.webp" alt="" draggable="false">
+  </div>
 
-      <h2>About</h2>
-      <p>
-        This is a placeholder paragraph. Replace it with two or three sentences about yourself:
-        what you study, what you are currently working on, and what you would like to do next.
-        Keep it short — a personal page reads better with a few honest lines than with a long CV.
-      </p>
+  <h1 class="name">
+    <span class="first">Jiahao</span>
+    <span class="last">Fan</span>
+  </h1>
 
-      <h2>Interests</h2>
-      <ul>
-        <li>Distributed systems — how work is split, moved and recombined</li>
-        <li>Computer networks — protocols, packet-level behaviour, performance</li>
-        <li>Data engineering — batch and stream processing with Spark</li>
-      </ul>
+  <p class="sub">
+    <span><i class="dot"></i>BEng Data Science &amp; Big Data Technology</span>
+    <span><i class="dot"></i>XJTLU</span>
+  </p>
+</main>
 
-      <h2>Contact</h2>
-      <div class="row">
-        <a href="mailto:you@example.com">Email</a>
-        <a href="https://github.com/your-username">GitHub</a>
-        <a href="#">LinkedIn</a>
-      </div>
-    </div>
-  </main>
+<div class="hint">drag the badge</div>
 
-  <footer>
-    <span>© 2026 Your Name</span>
-    <span>Last updated: November 2026</span>
-  </footer>
+<script>
+(function () {
+  const badge = document.getElementById('badge');
+  const PIVOT_TOP = 0;          // hangs from its top edge
+
+  let angle = 0;                // current rotation, degrees
+  let velocity = 0;             // degrees per frame
+  let target = 0;               // where the pointer wants it
+  let dragging = false;
+  let startX = 0;
+  let startAngle = 0;
+  let lastAngle = 0;
+  let pointerTarget = 0;
+
+  const MAX_TILT = 11;          // how far the pointer can pull it
+  const STIFF = 0.035;          // spring stiffness
+  const DAMP = 0.90;            // velocity damping
+
+  // pointer position -> target tilt
+  window.addEventListener('pointermove', (e) => {
+    if (dragging) return;
+    const cx = window.innerWidth / 2;
+    const norm = (e.clientX - cx) / (window.innerWidth / 2);
+    pointerTarget = Math.max(-1, Math.min(1, norm)) * MAX_TILT;
+    target = pointerTarget;
+  });
+
+  window.addEventListener('pointerleave', () => {
+    if (!dragging) target = 0;
+  });
+
+  // drag
+  badge.addEventListener('pointerdown', (e) => {
+    dragging = true;
+    badge.classList.add('dragging');
+    badge.setPointerCapture(e.pointerId);
+    startX = e.clientX;
+    startAngle = angle;
+    velocity = 0;
+  });
+
+  badge.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    const dx = e.clientX - startX;
+    angle = startAngle + dx * 0.18;
+    velocity = angle - lastAngle;
+    lastAngle = angle;
+    const cx = window.innerWidth / 2;
+    const norm = (e.clientX - cx) / (window.innerWidth / 2);
+    pointerTarget = Math.max(-1, Math.min(1, norm)) * MAX_TILT;
+  });
+
+  function release(e) {
+    if (!dragging) return;
+    dragging = false;
+    badge.classList.remove('dragging');
+    // give it a shove, then let the spring settle toward the pointer
+    target = pointerTarget;
+  }
+  badge.addEventListener('pointerup', release);
+  badge.addEventListener('pointercancel', release);
+
+  // physics loop
+  function tick() {
+    if (!dragging) {
+      velocity += (target - angle) * STIFF;
+      velocity *= DAMP;
+      angle += velocity;
+    }
+    lastAngle = angle;
+    badge.style.transform = `rotate(${angle.toFixed(3)}deg)`;
+    requestAnimationFrame(tick);
+  }
+
+  // start with a small nudge so it feels alive
+  velocity = 0.6;
+  tick();
+})();
+</script>
+
 </body>
 </html>
