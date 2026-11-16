@@ -265,8 +265,6 @@ export async function start(stage) {
   let dragging = false;
   let grabLocal = null;
   let pointer = null;
-  let lastPtr = null;
-  let lastT = 0;
 
   function toWorld(e) {
     const r = canvas.getBoundingClientRect();
@@ -284,6 +282,7 @@ export async function start(stage) {
   }
 
   canvas.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;          // left button only
     const hit = hitCard(e);
     if (!hit) return;
     dragging = true;
@@ -299,31 +298,14 @@ export async function start(stage) {
     e.preventDefault();
   });
 
+  // Hovering never moves the badge: the card only reacts while the left
+  // button is held down. Moving the pointer over it just changes the cursor.
   canvas.addEventListener('pointermove', (e) => {
-    const now = performance.now();
-    const dt = Math.max((now - lastT) / 1000, 0.016);
-
     if (dragging) {
       pointer = toWorld(e);
-      lastT = now;
-      lastPtr = { x: e.clientX, y: e.clientY };
       return;
     }
-
-    const hit = hitCard(e);
-    canvas.style.cursor = hit ? 'grab' : 'default';
-    if (hit && lastPtr) {
-      const vx = clamp((e.clientX - lastPtr.x) / dt, -12, 12);
-      const vy = clamp((e.clientY - lastPtr.y) / dt, -12, 8);
-      body.applyImpulseAtPoint(
-        { x: vx * 0.008, y: -vy * 0.004, z: 0 },
-        hit.point,
-        true
-      );
-      wake();
-    }
-    lastPtr = { x: e.clientX, y: e.clientY };
-    lastT = now;
+    canvas.style.cursor = hitCard(e) ? 'grab' : 'default';
   });
 
   const release = (e) => {
