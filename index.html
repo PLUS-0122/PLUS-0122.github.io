@@ -35,8 +35,9 @@
   /* ---------- hanging badge ---------- */
   .badge{
     position:relative;
-    margin-top:-140px;
-    width:250px;
+    height:60vh;
+    width:auto;
+    margin-top:-15vh;
     transform-origin:50% 0;
     will-change:transform;
     cursor:grab;
@@ -46,8 +47,8 @@
   .badge.dragging{cursor:grabbing}
   .badge img{
     display:block;
-    width:100%;
-    height:auto;
+    height:100%;
+    width:auto;
     filter:drop-shadow(0 26px 34px rgba(25,24,20,.22));
     -webkit-user-drag:none;
     user-select:none;
@@ -61,7 +62,7 @@
     text-align:center;
     line-height:.86;
     letter-spacing:-.035em;
-    font-size:clamp(48px,7.2vw,116px);
+    font-size:min(clamp(48px,8vw,130px),15vh);
     margin:-6px 0 0;
     z-index:1;
     position:relative;
@@ -73,7 +74,7 @@
   }
 
   .sub{
-    margin:34px 0 0;
+    margin:3.4vh 0 0;
     font-family:var(--mono);
     font-size:11.5px;
     letter-spacing:.24em;
@@ -105,8 +106,8 @@
   }
 
   @media (max-width:640px){
-    .badge{width:210px;margin-top:-130px}
-    .name{font-size:clamp(56px,17vw,110px)}
+    .badge{height:40vh;margin-top:-10.5vh}
+    .name{font-size:min(clamp(56px,17vw,110px),13vh)}
     .sub{font-size:10px;letter-spacing:.16em}
   }
 </style>
