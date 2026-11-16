@@ -4,14 +4,14 @@
   font-style:normal;font-weight:400;font-display:swap;
 }
 @font-face{
-  font-family:"Instrument Serif";
-  src:url("assets/fonts/instrument-serif-normal.woff2") format("woff2");
-  font-style:normal;font-weight:400;font-display:swap;
+  font-family:"Playfair Display";
+  src:url("assets/fonts/playfair-italic.woff2") format("woff2");
+  font-style:italic;font-weight:400;font-display:swap;
 }
 @font-face{
   font-family:"Instrument Serif";
-  src:url("assets/fonts/instrument-serif-italic.woff2") format("woff2");
-  font-style:italic;font-weight:400;font-display:swap;
+  src:url("assets/fonts/instrument-serif-normal.woff2") format("woff2");
+  font-style:normal;font-weight:400;font-display:swap;
 }
 
 :root{
@@ -19,7 +19,6 @@
   font-synthesis:none;
   --ease-out:cubic-bezier(.23,1,.32,1);
   --page-gutter:clamp(32px,8vw,128px);
-  --blue:#1400ff;
   background:#fafafa;
   font-family:"Instrument Serif",Georgia,"Times New Roman",serif;
   font-weight:400;
@@ -70,15 +69,15 @@ h1{
   font-family:"Playfair Display",Georgia,serif;
   letter-spacing:-.025em;
   white-space:nowrap;
-  font-size:22vw;
+  font-size:22.8vw;
   line-height:1;
   position:absolute;
   bottom:3vw;
-  left:-2.3vw;
+  left:0;
   z-index:1;
 }
 
-/* ---------- badge ---------- */
+/* ---------- lanyard ---------- */
 .badge{
   position:absolute;
   inset:0;
@@ -86,13 +85,29 @@ h1{
   container-type:size;
   pointer-events:none;
 }
-.badge .still{
+.cords{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  overflow:visible;
+  pointer-events:none;
+}
+.sheen{
+  stroke:#7b7267;
+  stroke-width:2;
+  stroke-dasharray:11 9;
+  opacity:.4;
+  pointer-events:none;
+}
+.cord{
+  filter:drop-shadow(0 1.5px 2.5px rgba(0,0,0,.22));
+}
+.card{
   position:absolute;
   top:0;
   left:0;
-  right:0;
-  margin:0 auto;
-  height:84cqh;
+  height:58cqh;
   width:auto;
   transform-origin:50% 0;
   pointer-events:auto;
@@ -100,13 +115,13 @@ h1{
   touch-action:none;
   user-select:none;
   -webkit-user-drag:none;
-  filter:drop-shadow(0 18px 26px rgba(0,0,0,.10));
+  filter:drop-shadow(0 16px 22px rgba(0,0,0,.13));
   will-change:transform;
 }
-.badge .still.dragging{cursor:grabbing}
+.card.dragging{cursor:grabbing}
 
 @media (max-width:700px){
   .intro,.education{font-size:.9375rem;top:72px}
-  h1{font-size:24vw;left:-3vw;bottom:14vh}
-  .badge .still{height:56cqh}
+  h1{font-size:30vw;bottom:16vh}
+  .card{height:52cqh}
 }
