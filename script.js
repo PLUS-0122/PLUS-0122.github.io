@@ -1,7 +1,9 @@
-/* Lanyard: the card is a pendulum hanging from a point above the viewport.
-   The two cords are drawn every frame and go slack on the side it swings away
-   from, which is what makes it read as a real lanyard rather than a rotating
-   picture. */
+/* Lanyard physics.
+   The badge is a pendulum: gravity pulls it down, the two strap halves go slack
+   on whichever side it swings away from. The pointer only nudges it when it is
+   close to the badge (a mouse three metres away should not move it), and the
+   pointer is sampled once per frame instead of once per event, which is what
+   kills the jitter. */
 
 (function () {
   const badge = document.getElementById('badge');
@@ -12,11 +14,11 @@
   const sheenB = document.getElementById('sheenB');
   if (!badge || !card) return;
 
-  const G = 1500;       // "gravity" in px/s^2
-  const DAMP = 0.95;    // angular damping per second
-  const PULL = 14.0;    // how hard the pointer pulls the card
-  const MAX_TILT = 0.60; // rad, pointer's maximum influence
-  const CORD_W = 13;
+  const GRAV = 2600;      // px/s^2 — sets the swing period
+  const DAMP = 1.55;      // angular damping, per second
+  const NEAR = 220;       // px, full pointer influence inside this radius
+  const FAR = 800;        // px, no influence beyond this
+  const SAMPLES = 20;
 
   let W = 1, H = 1;
   let pivot = { x: 0, y: 0 };
@@ -26,14 +28,19 @@
   let neckR = { x: 0, y: 0 };
   let cordLen = 1;
 
-  let phi = 0;          // angle of the hanging line, radians
-  let omega = 0;        // angular velocity
-  let targetPhi = 0;
+  let phi = 0;
+  let omega = 0;
+  let vel = 0;
+  let pointerX = null;
+  let lastPointerX = null;
+  let lastSpeed = 0;
+  let pointerY = null;
   let dragging = false;
   let dragStartX = 0;
   let dragStartPhi = 0;
-  let lastPhi = 0;
+  let dragPhi = 0;
   let lastT = 0;
+  let running = false;
 
   function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
 
@@ -52,11 +59,7 @@
     cordLen = Math.hypot(rest.x - neckL.x, rest.y - neckL.y) * 1.015;
   }
 
-  // A lanyard strap is a flat ribbon: wide where it leaves the neck, narrow
-  // where it meets the clip, and it bends instead of stretching. Sampled as a
-  // polygon so the taper and the bend can both be animated.
-  const SAMPLES = 22;
-
+  /* flat ribbon: wide at the neck, narrow at the clip, and it bends */
   function ribbon(p, c) {
     const dx = c.x - p.x;
     const dy = c.y - p.y;
@@ -78,7 +81,6 @@
       const it = 1 - t;
       const x = it * it * p.x + 2 * it * t * ctrl.x + t * t * c.x;
       const y = it * it * p.y + 2 * it * t * ctrl.y + t * t * c.y;
-      // tangent of the quadratic
       const tx = 2 * it * (ctrl.x - p.x) + 2 * t * (c.x - ctrl.x);
       const ty = 2 * it * (ctrl.y - p.y) + 2 * t * (c.y - ctrl.y);
       const len = Math.hypot(tx, ty) || 1;
@@ -103,8 +105,7 @@
     const cx = pivot.x + Math.sin(phi) * L;
     const cy = pivot.y + Math.cos(phi) * L;
 
-    // the card lags the cord slightly, so it whips on release
-    const cardPhi = phi + clamp(omega * 0.06, -0.22, 0.22);
+    const cardPhi = phi + clamp(omega * 0.05, -0.10, 0.10);
     card.style.transform =
       'translate(' + cx.toFixed(2) + 'px,' + cy.toFixed(2) + 'px) translate(-50%,0) rotate(' +
       (cardPhi * 180 / Math.PI).toFixed(3) + 'deg)';
@@ -118,32 +119,79 @@
   }
 
   function frame(t) {
-    const dt = Math.min(0.033, (t - (lastT || t)) / 1000);
+    const dt = Math.min(0.05, Math.max(0.001, (t - (lastT || t)) / 1000));
     lastT = t;
 
-    if (!dragging) {
-      const accel = (targetPhi - phi) * PULL - (G / L) * Math.sin(phi);
-      omega += (accel - DAMP * omega) * dt;
-      phi += omega * dt;
-    } else {
-      phi = clamp(phi, -1.2, 1.2);
-      omega = (phi - lastPhi) / (dt || 0.016);
-      lastPhi = phi;
+    // The pointer pushes the badge like a hand sweeping past it: what counts
+    // is how fast the mouse is moving, not where it is parked. A resting mouse
+    // therefore exerts exactly nothing, which is what stopped the jitter.
+    let speed = 0;
+    if (pointerX !== null) {
+      speed = (pointerX - lastPointerX) / dt;
+      lastPointerX = pointerX;
     }
+    speed = speed * 0.5 + lastSpeed * 0.5; // tame one-frame spikes
+    lastSpeed = speed;
+
+    const cx0 = pivot.x + Math.sin(phi) * L;
+    const cy0 = pivot.y + Math.cos(phi) * L;
+    let weight = 0;
+    if (pointerX !== null && !dragging) {
+      const dist = Math.hypot(pointerX - cx0, pointerY - (cy0 + 0.29 * H));
+      weight = 1 - clamp((dist - NEAR) / (FAR - NEAR), 0, 1);
+      weight *= weight;
+    }
+    const air = clamp(speed * 0.6, -2600, 2600) * weight;
+
+    const prev = phi;
+    if (dragging) {
+      // the card follows the hand, but through a fast ease so a dropped frame
+      // or a jumpy mouse can never teleport it
+      phi += (dragPhi - phi) * Math.min(1, dt * 30);
+    } else {
+      const accel = air / L - (GRAV / L) * Math.sin(phi);
+      omega += (accel - DAMP * omega) * dt;
+      omega = clamp(omega, -4.5, 4.5);
+      phi += omega * dt;
+    }
+    const raw = (phi - prev) / dt;
+    vel = vel * 0.72 + raw * 0.28;
+
+    if (!dragging) phi = clamp(phi, -1.0, 1.0);
 
     render();
+
+    // park the loop once the badge has actually stopped moving. Asking "is it
+    // near its target" never becomes true while the pointer holds it away from
+    // rest, and a loop that never parks keeps the compositor busy forever.
+    const settled = !dragging && Math.abs(phi - prev) < 0.00002 && Math.abs(omega) < 0.004;
+    if (settled) {
+      omega = 0;
+      vel = 0;
+      running = false;
+      return;
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function wake() {
+    if (running) return;
+    running = true;
+    lastT = 0;
     requestAnimationFrame(frame);
   }
 
   window.addEventListener('pointermove', (e) => {
-    if (dragging) return;
-    const norm = clamp((e.clientX - W / 2) / (W / 2), -1, 1);
-    targetPhi = norm * MAX_TILT;
+    if (lastPointerX === null) lastPointerX = e.clientX;
+    pointerX = e.clientX;
+    pointerY = e.clientY;
+    wake();
+    if (!dragging) return;
+    dragPhi = clamp(dragStartPhi + (e.clientX - dragStartX) / (0.8 * L), -1.1, 1.1);
   }, { passive: true });
 
-  window.addEventListener('pointerleave', () => {
-    if (!dragging) targetPhi = 0;
-  });
+  window.addEventListener('pointerleave', () => { pointerX = null; pointerY = null; lastPointerX = null; });
+  window.addEventListener('blur', () => { pointerX = null; pointerY = null; lastPointerX = null; });
 
   card.addEventListener('pointerdown', (e) => {
     dragging = true;
@@ -151,27 +199,31 @@
     card.setPointerCapture(e.pointerId);
     dragStartX = e.clientX;
     dragStartPhi = phi;
-    lastPhi = phi;
+    dragPhi = phi;
     omega = 0;
+    wake();
     e.preventDefault();
   });
 
-  card.addEventListener('pointermove', (e) => {
-    if (!dragging) return;
-    phi = dragStartPhi + (e.clientX - dragStartX) / (0.85 * L);
-  });
-
-  function release() {
+  function release(e) {
     if (!dragging) return;
     dragging = false;
     card.classList.remove('dragging');
+    if (card.hasPointerCapture && e && e.pointerId !== undefined &&
+        card.hasPointerCapture(e.pointerId)) {
+      card.releasePointerCapture(e.pointerId);
+    }
+    // the badge keeps the speed of the hand, but not more than a lanyard can
+    omega = clamp(vel, -3.5, 3.5);
+    wake();
   }
   card.addEventListener('pointerup', release);
   card.addEventListener('pointercancel', release);
+  window.addEventListener('pointerup', release);
 
   measure();
-  window.addEventListener('resize', measure);
+  window.addEventListener('resize', () => { measure(); wake(); });
   render();
-  omega = 0.35; // a nudge on load
-  requestAnimationFrame(frame);
+  omega = 0.5;
+  wake();
 })();

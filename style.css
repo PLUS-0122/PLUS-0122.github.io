@@ -107,7 +107,7 @@ h1{
   position:absolute;
   top:0;
   left:0;
-  height:58cqh;
+  height:61cqh;
   width:auto;
   transform-origin:50% 0;
   pointer-events:auto;
@@ -115,7 +115,6 @@ h1{
   touch-action:none;
   user-select:none;
   -webkit-user-drag:none;
-  filter:drop-shadow(0 16px 22px rgba(0,0,0,.13));
   will-change:transform;
 }
 .card.dragging{cursor:grabbing}
