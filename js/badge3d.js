@@ -340,6 +340,7 @@ export async function start(stage) {
 
   /* ------------------------------- loop ------------------------------- */
   let raf = 0, acc = 0, last = 0, still = 0;
+  let started = performance.now();
   const quat = new THREE.Quaternion();
   const eul = new THREE.Euler();
 
@@ -412,14 +413,23 @@ export async function start(stage) {
     renderOnce();
     if (kick) report();
 
+    // park the loop once the badge has settled, so an idle hero costs nothing
+    // (a renderer that repaints forever also keeps screenshot tools waiting)
     const v = body.linvel(), a = body.angvel();
-    const quiet = Math.hypot(v.x, v.y, v.z) < 0.02 && Math.hypot(a.x, a.y, a.z) < 0.02 && !dragging;
+    const quiet = Math.hypot(v.x, v.y, v.z) < 0.06 && Math.hypot(a.x, a.y, a.z) < 0.06 && !dragging;
     still = quiet ? still + 1 : 0;
-    if (still > 45) stop();
+    if (!dragging && still > 40) {
+      body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+      body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+      still = 0;
+      stop();
+      return;
+    }
+    if (!dragging && now - started > 9000) { still = 0; stop(); return; }
   }
 
   function wake() {
-    if (!raf) { last = 0; still = 0; raf = requestAnimationFrame(frame); }
+    if (!raf) { last = 0; still = 0; started = performance.now(); raf = requestAnimationFrame(frame); }
   }
 
   function stop() {
