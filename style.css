@@ -29,6 +29,16 @@ h1,h2,p{margin:0;font-weight:400}
 a{color:inherit;text-decoration:none}
 button{font:inherit}
 
+:focus-visible{outline:2px solid #080808;outline-offset:3px}
+
+/* keyboard-only skip link */
+.skip{
+  position:absolute;left:8px;top:-64px;z-index:10;
+  background:#080808;color:#fafafa;padding:10px 14px;border-radius:4px;
+  font-size:.9375rem;transition:top .15s var(--ease-out);
+}
+.skip:focus{top:8px}
+
 /* ---------- hero ---------- */
 .hero{
   background:#fff;
@@ -112,8 +122,54 @@ h1{
 }
 .stage.live .fallback{opacity:0;visibility:hidden}
 
+/* ---------- footer ---------- */
+.footer{
+  background:#fafafa;
+  border-top:1px solid #ececec;
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:12px 24px;
+  flex-wrap:wrap;
+  padding:20px var(--page-gutter);
+  color:#8a8792;
+  font-size:.875rem;
+}
+.footer a{
+  text-decoration:underline;
+  text-underline-offset:3px;
+  text-decoration-thickness:1px;
+  transition:color .15s;
+}
+.footer a:hover{color:#080808}
+
+/* ---------- 404 ---------- */
+.notfound{
+  min-height:100vh;
+  display:grid;
+  place-content:center;
+  justify-items:center;
+  gap:16px;
+  padding:32px;
+  text-align:center;
+  background:#fff;
+}
+.notfound h1{
+  position:static;
+  font-family:"Playfair Display",Georgia,serif;
+  font-size:clamp(72px,20vw,200px);
+  letter-spacing:-.03em;
+  line-height:1;
+}
+.notfound p{max-width:34ch;color:#555;line-height:1.5}
+.notfound a{
+  text-decoration:underline;
+  text-underline-offset:4px;
+}
+
 @media (max-width:700px){
   .intro,.education{font-size:.9375rem;top:72px}
   h1{font-size:30vw;bottom:16vh}
   .stage .fallback{height:64cqh}
+  .footer{padding-top:16px;padding-bottom:16px}
 }
